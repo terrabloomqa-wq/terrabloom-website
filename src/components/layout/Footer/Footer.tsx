@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { MessageCircle, Mail } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 import { buildGeneralWhatsAppUrl } from '@/lib/whatsapp';
 
 export default function Footer() {
   const { settings } = useStore();
-  const [email, setEmail] = useState('');
 
   const currentYear = new Date().getFullYear();
 
@@ -16,37 +17,22 @@ export default function Footer() {
     { label: 'Closed Terrariums', href: '/shop?category=closed-terrariums' },
     { label: 'Open Terrariums', href: '/shop?category=open-terrariums' },
     { label: 'Paludariums', href: '/shop?category=paludariums' },
-    { label: 'Terrarium Kits', href: '/kits-accessories' },
-    { label: 'Accessories', href: '/kits-accessories' },
   ];
 
   const companyLinks = [
     { label: 'About Us', href: '/about' },
-    { label: 'Our Process', href: '/about' },
-    { label: 'Care Guide', href: '/about' },
-    { label: 'Blog', href: '/about' },
-    { label: 'Contact Us', href: '/about' },
-  ];
-
-  const helpLinks = [
-    { label: 'FAQs', href: '/about' },
-    { label: 'Shipping & Delivery', href: '/about' },
-    { label: 'Returns & Refunds', href: '/about' },
-    { label: 'Terms & Conditions', href: '/about' },
-    { label: 'Privacy Policy', href: '/about' },
+    { label: 'Contact Us', href: '/contact' },
   ];
 
   return (
     <footer className="bg-primary text-white">
       <div className="max-w-[1280px] mx-auto px-6 pt-16 pb-8">
         {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-lg">
-                🌿
-              </div>
+              <Image src="/images/logo.png" alt="Terra Bloom Logo" width={48} height={48} className="w-12 h-12 object-contain" />
               <div className="flex flex-col">
                 <span className="font-heading text-lg font-bold leading-tight tracking-wide">
                   TERRA BLOOM
@@ -90,59 +76,33 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Help */}
+          {/* Customer Care */}
           <div>
-            <h4 className="font-display text-sm font-semibold uppercase tracking-wider mb-4">Help</h4>
-            <ul className="flex flex-col gap-2">
-              {helpLinks.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="text-sm text-white/70 hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+            <h4 className="font-display text-sm font-semibold uppercase tracking-wider mb-4">Customer Care</h4>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <a href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-white/70 hover:text-white transition-colors flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp Us
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${settings.contact_email}`} className="text-sm text-white/70 hover:text-white transition-colors flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  {settings.contact_email}
+                </a>
+              </li>
             </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div>
-            <h4 className="font-display text-sm font-semibold uppercase tracking-wider mb-4">Newsletter</h4>
-            <p className="text-sm text-white/70 mb-3">
-              Get tips, care guides, early offers & more to your inbox!
-            </p>
-            <form
-              className="flex gap-0"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setEmail('');
-                alert('Thank you for subscribing!');
-              }}
-            >
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-2.5 rounded-l-lg bg-white/10 border border-white/20 text-sm text-white placeholder:text-white/50 outline-none focus:bg-white/15 transition-colors"
-                required
-              />
-              <button
-                type="submit"
-                className="px-4 py-2.5 bg-white text-primary rounded-r-lg text-sm font-semibold hover:bg-white/90 transition-colors cursor-pointer"
-              >
-                →
-              </button>
-            </form>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/15 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="border-t border-white/15 pt-6 flex flex-col items-center justify-center gap-2 text-center">
           <p className="text-xs text-white/50">
             © {currentYear} Terra Bloom. All rights reserved.
           </p>
-          <p className="text-xs text-white/50 flex items-center gap-1">
-            Designed with <span className="text-red-400">♥</span> for nature lovers
+          <p className="text-xs text-white/50">
+            Crafted by <a href="https://www.ekodrix.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Ekodrix</a>
           </p>
         </div>
       </div>

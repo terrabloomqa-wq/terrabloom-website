@@ -14,7 +14,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   contact_email: 'hello@terrabloom.in',
   contact_phone: '+91 98765 43210',
   address: 'Bangalore, Karnataka, India',
-  announcement_text: 'Handcrafted mini ecosystems, delivered with care across India.',
+  announcement_text: 'Handcrafted mini ecosystems, delivered with care across Qatar.',
   instagram_url: 'https://instagram.com/terrabloom',
   facebook_url: 'https://facebook.com/terrabloom',
 };

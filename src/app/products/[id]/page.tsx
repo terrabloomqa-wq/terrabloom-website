@@ -32,8 +32,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-cream">
-        <div className="text-center animate-fade-in">
-          <div className="text-5xl mb-4">🌿</div>
+        <div className="text-center animate-fade-in flex flex-col items-center">
+          <img src="/images/logo.png" alt="Loading" className="w-16 h-16 object-contain mb-4 animate-pulse" />
           <p className="text-lg text-text-secondary">Loading product...</p>
         </div>
       </div>

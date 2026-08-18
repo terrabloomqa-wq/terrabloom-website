@@ -27,10 +27,8 @@ function LoginForm() {
     <div className="min-h-screen bg-bg-cream flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4">
-            🌿
-          </div>
+        <div className="text-center mb-8 flex flex-col items-center">
+          <img src="/images/logo.png" alt="Terra Bloom Logo" className="w-20 h-20 object-contain mx-auto mb-4" />
           <h1 className="font-heading text-3xl font-bold text-primary">Terra Bloom</h1>
           <p className="text-text-secondary mt-2">Admin Dashboard</p>
         </div>

@@ -97,5 +97,5 @@ CREATE POLICY "Admin full access categories" ON categories FOR ALL USING (auth.r
 
 -- ---- Seed: Default Store Settings ----
 INSERT INTO store_settings (store_name, tagline, whatsapp_number, contact_email, contact_phone, address, announcement_text)
-VALUES ('Terra Bloom', 'A World Within Glass', '919876543210', 'hello@terrabloom.in', '+91 98765 43210', 'Bangalore, Karnataka, India', 'Handcrafted mini ecosystems, delivered with care across India.')
+VALUES ('Terra Bloom', 'A World Within Glass', '919876543210', 'hello@terrabloom.in', '+91 98765 43210', 'Bangalore, Karnataka, India', 'Handcrafted mini ecosystems, delivered with care across Qatar.')
 ON CONFLICT DO NOTHING;
