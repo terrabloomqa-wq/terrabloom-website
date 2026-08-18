@@ -41,9 +41,6 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
               <h3 className="text-sm font-semibold text-text-main group-hover:text-secondary transition-colors">
                 {category.name}
               </h3>
-              {category.description && (
-                <p className="text-xs text-text-muted mt-1">{category.description}</p>
-              )}
             </Link>
           ))}
         </div>
