@@ -3,31 +3,50 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AnnouncementBar, Header, Footer } from '@/components/layout';
-import { WhatsappModal } from '@/components/storefront';
-import { getProductById } from '@/services';
+import { WhatsappModal, ProductGrid } from '@/components/storefront';
+import { getProductBySlug, getProducts } from '@/services';
 import { useStore } from '@/context/StoreContext';
+import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
+import { Leaf, Truck, Recycle, MessageCircle } from 'lucide-react';
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+import { useParams } from 'next/navigation';
+
+export default function ProductDetailPage() {
+  const params = useParams<{ slug: string }>();
+  const slug = params?.slug;
+
   const [product, setProduct] = useState<Product | null>(null);
+  const [notFoundState, setNotFoundState] = useState(false);
+  const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { openWhatsappModal } = useStore();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     async function loadProduct() {
+      if (!slug) return;
       try {
-        const { id } = await params;
-        const data = await getProductById(id);
-        setProduct(data);
+        const [data, allProducts] = await Promise.all([
+          getProductBySlug(slug),
+          getProducts(),
+        ]);
+        if (!data) {
+          setNotFoundState(true);
+        } else {
+          setProduct(data);
+          setSuggestedProducts(allProducts.filter(p => p.id !== data.id).slice(0, 4));
+        }
       } catch (err) {
         console.error('Error loading product:', err);
+        setNotFoundState(true);
       } finally {
         setLoading(false);
       }
     }
     loadProduct();
-  }, [params]);
+  }, [slug]);
 
   if (loading) {
     return (
@@ -40,16 +59,28 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  if (!product) {
+  if (notFoundState || !product) {
     return (
       <>
         <AnnouncementBar />
         <Header />
-        <main className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="font-heading text-3xl mb-4">Product Not Found</h1>
-            <Link href="/shop" className="text-secondary hover:underline">
-              ← Back to Shop
+        <main className="min-h-[70vh] flex flex-col items-center justify-center bg-bg-cream px-6 py-20 relative overflow-hidden">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-48 h-48 bg-secondary/5 rounded-full blur-3xl"></div>
+          <div className="max-w-2xl mx-auto text-center animate-fade-in-up relative z-10">
+            <div className="relative inline-block mb-8">
+              <h1 className="text-[100px] md:text-[150px] font-heading font-bold text-primary opacity-5 leading-none select-none">404</h1>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-3xl md:text-4xl font-heading font-bold text-primary-dark">Oops!</span>
+              </div>
+            </div>
+            <h2 className="text-xl md:text-2xl font-semibold text-text-main mb-4">Product Not Found</h2>
+            <p className="text-base text-text-secondary mb-8 max-w-md mx-auto">This terrarium seems to have returned to nature. Browse our full collection instead.</p>
+            <Link href="/shop" className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-xl font-medium text-lg hover:bg-primary-light hover:-translate-y-1 transition-all duration-300 shadow-soft hover:shadow-card">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Browse Shop
             </Link>
           </div>
         </main>
@@ -128,17 +159,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 {product.description}
               </p>
 
-              {/* Care Instructions */}
-              {product.care_instructions && (
-                <div className="p-5 bg-bg-green-light rounded-xl mb-8">
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-primary mb-2">
-                    🌱 Care Instructions
-                  </h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">
-                    {product.care_instructions}
-                  </p>
-                </div>
-              )}
+
 
               {/* Stock Status */}
               <div className="flex items-center gap-2 mb-6">
@@ -151,52 +172,55 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               {/* Actions */}
               <div className="flex gap-4">
                 <button
-                  onClick={() => openWhatsappModal(product)}
+                  onClick={() => addToCart(product)}
                   disabled={!product.in_stock}
                   className="flex-1 py-4 bg-primary text-white rounded-xl font-semibold text-lg hover:bg-primary-light hover:-translate-y-0.5 hover:shadow-card transition-all duration-250 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  Buy Now
+                  Add to Cart
                 </button>
                 <button
                   onClick={() => openWhatsappModal(product)}
                   disabled={!product.in_stock}
                   className="py-4 px-6 border-2 border-primary text-primary rounded-xl font-semibold text-lg hover:bg-primary hover:text-white hover:-translate-y-0.5 transition-all duration-250 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  Enquire
+                  Buy Now
                 </button>
               </div>
 
-              {/* Tags */}
-              {product.tags && product.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-6">
-                  {product.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-bg-warm text-text-muted text-xs rounded-full"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
+
 
               {/* Trust Features */}
               <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-border-custom">
                 {[
-                  { icon: '🌱', text: 'Live Arrival Guarantee' },
-                  { icon: '🚚', text: 'Free Pan India Delivery' },
-                  { icon: '♻️', text: 'Eco-Friendly Packaging' },
-                  { icon: '💬', text: '24/7 Expert Support' },
-                ].map((feature) => (
-                  <div key={feature.text} className="flex items-center gap-2">
-                    <span className="text-lg">{feature.icon}</span>
-                    <span className="text-xs text-text-secondary">{feature.text}</span>
-                  </div>
-                ))}
+                  { icon: Leaf, text: 'Live Arrival Guarantee', color: 'text-emerald-500' },
+                  { icon: Truck, text: 'Free Delivery Across Doha', color: 'text-orange-500' },
+                  { icon: Recycle, text: 'Eco-Friendly Packaging', color: 'text-teal-500' },
+                  { icon: MessageCircle, text: '24/7 Expert Support', color: 'text-indigo-500' },
+                ].map((feature, idx) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div key={idx} className="flex items-center gap-2">
+                      <Icon className={`w-5 h-5 ${feature.color}`} strokeWidth={2} />
+                      <span className="text-xs text-text-secondary">{feature.text}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </section>
+
+        {/* Suggested Products */}
+        {suggestedProducts.length > 0 && (
+          <div className="border-t border-border-custom bg-bg-cream pt-4 pb-8">
+            <ProductGrid 
+              products={suggestedProducts} 
+              title="You Might Also Like" 
+              subtitle="Discover more handcrafted terrariums"
+              columns={4}
+            />
+          </div>
+        )}
       </main>
 
       <Footer />

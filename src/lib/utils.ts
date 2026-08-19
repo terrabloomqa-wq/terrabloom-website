@@ -3,10 +3,10 @@
 // ============================================================
 
 /**
- * Format price in Indian Rupees.
+ * Format price in Qatari Riyal.
  */
 export function formatPrice(amount: number): string {
-  return `₹${amount.toLocaleString('en-IN')}`;
+  return `QAR ${amount.toLocaleString('en-QA')}`;
 }
 
 /**

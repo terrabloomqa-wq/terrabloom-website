@@ -14,6 +14,7 @@ export default function AdminBannersPage() {
     title: '',
     subtitle: '',
     image_url: '',
+    mobile_image_url: '',
     badge_text: '',
     cta_text: 'Shop Terrariums',
     cta_link: '/shop',
@@ -41,6 +42,7 @@ export default function AdminBannersPage() {
       title: '',
       subtitle: '',
       image_url: '',
+      mobile_image_url: '',
       badge_text: '',
       cta_text: 'Shop Terrariums',
       cta_link: '/shop',
@@ -57,6 +59,7 @@ export default function AdminBannersPage() {
       title: banner.title,
       subtitle: banner.subtitle,
       image_url: banner.image_url,
+      mobile_image_url: banner.mobile_image_url || '',
       badge_text: banner.badge_text || '',
       cta_text: banner.cta_text,
       cta_link: banner.cta_link,
@@ -137,11 +140,18 @@ export default function AdminBannersPage() {
             />
           </div>
 
-          <ImageUpload
-            label="Banner Image"
-            value={form.image_url}
-            onChange={(url) => setForm({ ...form, image_url: url })}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ImageUpload
+              label="Desktop Banner Image *"
+              value={form.image_url}
+              onChange={(url) => setForm({ ...form, image_url: url })}
+            />
+            <ImageUpload
+              label="Mobile Banner Image (Optional)"
+              value={form.mobile_image_url}
+              onChange={(url) => setForm({ ...form, mobile_image_url: url })}
+            />
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1">

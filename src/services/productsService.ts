@@ -120,6 +120,44 @@ export async function getProductById(id: string): Promise<Product | null> {
 }
 
 /**
+ * Fetch a single product by Slug.
+ * Falls back to scanning all products if direct slug query returns nothing
+ * (e.g. if the slug column is missing or empty in the database).
+ */
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  if (!isSupabaseConfigured()) {
+    return DEFAULT_PRODUCTS.find((p) => p.slug === slug) || null;
+  }
+
+  const supabase = getSupabaseClient()!;
+
+  // First: try direct slug query (fast path)
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (!error && data) {
+    return data as Product;
+  }
+
+  // Fallback: fetch all products and match by slug in memory
+  // This handles cases where the slug column is missing or empty in the DB
+  const { data: allData, error: allError } = await supabase
+    .from('products')
+    .select('*');
+
+  if (allError || !allData) {
+    console.error('Error fetching products for slug fallback:', allError);
+    return null;
+  }
+
+  const found = (allData as Product[]).find((p) => p.slug === slug || p.id === slug);
+  return found || null;
+}
+
+/**
  * Create a new product.
  */
 export async function createProduct(product: Omit<Product, 'id' | 'created_at'>): Promise<Product | null> {

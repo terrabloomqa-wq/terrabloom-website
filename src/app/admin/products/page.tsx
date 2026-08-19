@@ -20,12 +20,21 @@ export default function AdminProductsPage() {
     original_price: 0,
     image_url: '',
     description: '',
-    care_instructions: '',
     best_seller: false,
     featured: false,
     in_stock: true,
-    tags: '',
   });
+
+  function generateUniqueSlug(base: string, excludeId?: string): string {
+    const baseSlug = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const existing = products
+      .filter(p => !excludeId || p.id !== excludeId)
+      .map(p => p.slug);
+    if (!existing.includes(baseSlug)) return baseSlug;
+    let counter = 2;
+    while (existing.includes(`${baseSlug}-${counter}`)) counter++;
+    return `${baseSlug}-${counter}`;
+  }
 
   useEffect(() => {
     loadProducts();
@@ -46,8 +55,7 @@ export default function AdminProductsPage() {
     setForm({
       title: '', slug: '', category: '', category_slug: '',
       price: 0, original_price: 0, image_url: '', description: '',
-      care_instructions: '', best_seller: false, featured: false,
-      in_stock: true, tags: '',
+      best_seller: false, featured: false, in_stock: true,
     });
     setEditingProduct(null);
     setIsFormOpen(false);
@@ -64,11 +72,9 @@ export default function AdminProductsPage() {
       original_price: product.original_price || 0,
       image_url: product.image_url,
       description: product.description,
-      care_instructions: product.care_instructions || '',
       best_seller: product.best_seller,
       featured: product.featured,
       in_stock: product.in_stock,
-      tags: product.tags?.join(', ') || '',
     });
     setIsFormOpen(true);
   }
@@ -77,7 +83,6 @@ export default function AdminProductsPage() {
     e.preventDefault();
     const productData = {
       ...form,
-      tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
       original_price: form.original_price || undefined,
     };
 
@@ -133,7 +138,7 @@ export default function AdminProductsPage() {
                 value={form.title}
                 onChange={(e) => {
                   const title = e.target.value;
-                  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                  const slug = generateUniqueSlug(title, editingProduct?.id);
                   setForm({ ...form, title, slug });
                 }}
                 className="px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
@@ -208,25 +213,9 @@ export default function AdminProductsPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Care Instructions</label>
-            <textarea
-              value={form.care_instructions}
-              onChange={(e) => setForm({ ...form, care_instructions: e.target.value })}
-              className="px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm resize-none"
-              rows={2}
-            />
-          </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Tags (comma-separated)</label>
-            <input
-              value={form.tags}
-              onChange={(e) => setForm({ ...form, tags: e.target.value })}
-              className="px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
-              placeholder="bestseller, gift-ready, premium"
-            />
-          </div>
+
+
 
           <div className="flex items-center gap-6">
             <label className="flex items-center gap-2 cursor-pointer">

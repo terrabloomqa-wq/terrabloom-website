@@ -4,8 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_TESTIMONIALS } from '@/lib/constants';
 import type { Testimonial } from '@/types';
 
-export default function TestimonialSlider() {
-  const testimonials: Testimonial[] = DEFAULT_TESTIMONIALS;
+export default function TestimonialSlider({ testimonials = DEFAULT_TESTIMONIALS }: { testimonials?: Testimonial[] }) {
   const [current, setCurrent] = useState(0);
 
   const next = useCallback(() => {
@@ -18,6 +17,10 @@ export default function TestimonialSlider() {
   }, [next]);
 
   const testimonial = testimonials[current];
+
+  if (!testimonials || testimonials.length === 0 || !testimonial) {
+    return null;
+  }
 
   return (
     <section className="py-20 bg-white">

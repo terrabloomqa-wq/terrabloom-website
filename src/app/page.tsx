@@ -11,29 +11,32 @@ import {
   TestimonialSlider,
   WhatsappModal,
 } from '@/components/storefront';
-import { getBanners, getBestSellers, getCategories, getStoreSettings } from '@/services';
-import type { HeroBanner, Product, Category, StoreSettings } from '@/types';
+import { getBanners, getBestSellers, getCategories, getStoreSettings, getTestimonials } from '@/services';
+import type { HeroBanner, Product, Category, StoreSettings, Testimonial } from '@/types';
 
 export default function HomePage() {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [bannersData, productsData, categoriesData, settingsData] = await Promise.all([
+        const [bannersData, productsData, categoriesData, settingsData, testimonialsData] = await Promise.all([
           getBanners(),
           getBestSellers(),
           getCategories(),
           getStoreSettings(),
+          getTestimonials(),
         ]);
         setBanners(bannersData);
         setBestSellers(productsData);
         setCategories(categoriesData);
         setSettings(settingsData);
+        setTestimonials(testimonialsData);
       } catch (err) {
         console.error('Error loading home data:', err);
       } finally {
@@ -93,6 +96,36 @@ export default function HomePage() {
         {/* Trust Badges */}
         <TrustBadges />
 
+        {/* Qatar Banner */}
+        <section className="relative w-full py-24 md:py-32 overflow-hidden flex items-center min-h-[450px]">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="/images/qatar-baner.png" 
+              alt="Nature Made for Qatar" 
+              className="w-full h-full object-cover"
+            />
+            {/* Subtle gradient overlay to ensure text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent"></div>
+          </div>
+          
+          <div className="relative z-10 max-w-[1280px] mx-auto px-6 w-full">
+            <div className="max-w-lg">
+              <h2 className="font-heading text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
+                Nature, Made<br />for Qatar
+              </h2>
+              <p className="text-white/90 text-sm md:text-lg mb-6 md:mb-8 leading-relaxed">
+                Inspired by the beauty of Qatar, our terrariums bring a touch of nature into your home, office, and every special space.
+              </p>
+              <Link
+                href="/shop"
+                className="inline-flex items-center px-6 py-3 bg-[#2c4028] text-white rounded border border-[#3e5639] hover:bg-[#1f2d1c] transition-colors"
+              >
+                Explore Our Terrariums
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Custom Terrariums Section */}
         <section className="py-20 bg-bg-green-light">
           <div className="max-w-[1280px] mx-auto px-6 text-center">
@@ -112,7 +145,7 @@ export default function HomePage() {
         </section>
 
         {/* Testimonials */}
-        <TestimonialSlider />
+        <TestimonialSlider testimonials={testimonials} />
       </main>
 
       <Footer />

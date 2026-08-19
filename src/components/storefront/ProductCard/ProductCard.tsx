@@ -2,10 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Crown } from 'lucide-react';
 import type { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { useStore } from '@/context/StoreContext';
+import { useCart } from '@/context/CartContext';
 
 interface ProductCardProps {
   product: Product;
@@ -13,30 +14,36 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { openWhatsappModal } = useStore();
+  const { addToCart } = useCart();
   const hasDiscount = product.original_price && product.original_price > product.price;
 
   return (
     <div className="group bg-white rounded-xl overflow-hidden border border-border-custom hover:shadow-elevated hover:-translate-y-1 transition-all duration-300">
       {/* Image */}
-      <Link href={`/products/${product.id}`} className="block relative overflow-hidden aspect-square bg-bg-warm">
+      <Link href={`/products/${product.slug}`} className="block relative overflow-hidden aspect-square bg-bg-warm">
         <div
           className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
           style={{ backgroundImage: `url(${product.image_url})` }}
         />
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {product.best_seller && (
-            <span className="px-2.5 py-1 bg-accent text-white text-[11px] font-semibold rounded-md uppercase tracking-wider">
-              Best Seller
-            </span>
-          )}
+        {/* Left Badges */}
+        <div className="absolute top-3 left-3 flex flex-col items-start gap-2 z-10">
           {hasDiscount && (
-            <span className="px-2.5 py-1 bg-error text-white text-[11px] font-semibold rounded-md">
+            <span className="px-2.5 py-1 bg-error text-white text-[11px] font-semibold rounded-md shadow-sm">
               {Math.round(((product.original_price! - product.price) / product.original_price!) * 100)}% OFF
             </span>
           )}
         </div>
+
+        {/* Right Badges */}
+        {product.best_seller && (
+          <div 
+            className="absolute top-3 right-3 flex items-center justify-center w-8 h-8 bg-white/95 backdrop-blur-sm rounded-full shadow-sm text-accent z-10" 
+            title="Best Seller"
+          >
+            <Crown className="w-4 h-4" />
+          </div>
+        )}
 
         {/* Quick View on Hover */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
@@ -48,7 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Info */}
       <div className="p-4">
-        <Link href={`/products/${product.id}`}>
+        <Link href={`/products/${product.slug}`}>
           <h3 className="font-display text-base font-semibold text-text-main group-hover:text-secondary transition-colors mb-1 truncate">
             {product.title}
           </h3>
@@ -71,11 +78,14 @@ export default function ProductCard({ product }: ProductCardProps) {
             Buy Now
           </button>
           <button
-            onClick={() => openWhatsappModal(product)}
-            className="w-10 h-10 flex items-center justify-center border border-border-custom rounded-lg hover:bg-bg-warm transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              addToCart(product);
+            }}
+            className="w-10 h-10 flex items-center justify-center border border-border-custom rounded-lg hover:bg-bg-warm transition-colors cursor-pointer group-hover:border-primary/30"
             aria-label="Add to cart"
           >
-            <ShoppingCart className="w-4 h-4 text-text-main" />
+            <ShoppingCart className="w-4 h-4 text-text-main group-hover:text-primary transition-colors" />
           </button>
         </div>
       </div>

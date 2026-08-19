@@ -8,6 +8,7 @@ export interface HeroBanner {
   title: string;
   subtitle: string;
   image_url: string;
+  mobile_image_url?: string;
   cta_text: string;
   cta_link: string;
   badge_text?: string;
@@ -44,6 +45,11 @@ export interface Product {
   in_stock: boolean;
   tags?: string[];
   created_at?: string;
+}
+
+// ---- Cart Item ----
+export interface CartItem extends Product {
+  quantity: number;
 }
 
 // ---- Store Settings ----
@@ -91,10 +97,9 @@ export interface Order {
 export interface ShippingFormData {
   name: string;
   phone: string;
-  email?: string;
-  address: string;
-  city: string;
-  pincode: string;
+  zone: string;
+  street: string;
+  building: string;
   notes?: string;
 }
 

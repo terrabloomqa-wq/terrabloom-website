@@ -5,3 +5,4 @@ export { default as ProductGrid } from './ProductGrid/ProductGrid';
 export { default as TrustBadges } from './TrustBadges/TrustBadges';
 export { default as TestimonialSlider } from './TestimonialSlider/TestimonialSlider';
 export { default as WhatsappModal } from './WhatsappModal/WhatsappModal';
+export { default as SearchModal } from './SearchModal/SearchModal';

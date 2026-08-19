@@ -32,7 +32,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl shadow-hero w-full max-h-[90vh] overflow-y-auto animate-scale-in"
+        className="bg-white rounded-2xl shadow-hero w-full max-h-[90vh] overflow-y-auto scrollbar-hide animate-scale-in"
         style={{ maxWidth }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"

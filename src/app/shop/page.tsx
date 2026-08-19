@@ -11,6 +11,8 @@ import { useSearchParams } from 'next/navigation';
 function ShopContent() {
   const searchParams = useSearchParams();
   const categoryFilter = searchParams.get('category');
+  const searchQuery = searchParams.get('q');
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryFilter);
@@ -40,6 +42,14 @@ function ShopContent() {
     ? products.filter((p) => p.category_slug === activeCategory)
     : products;
 
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    filtered = filtered.filter(p => 
+      p.title.toLowerCase().includes(query) || 
+      p.description.toLowerCase().includes(query)
+    );
+  }
+
   if (sortBy === 'price-low') {
     filtered = [...filtered].sort((a, b) => a.price - b.price);
   } else if (sortBy === 'price-high') {
@@ -54,9 +64,11 @@ function ShopContent() {
       <section className="bg-bg-cream py-12 border-b border-border-custom">
         <div className="max-w-[1280px] mx-auto px-6">
           <h1 className="font-heading text-4xl md:text-5xl font-bold text-text-main mb-3">
-            {activeCategory
-              ? DEFAULT_CATEGORIES.find((c) => c.slug === activeCategory)?.name || 'Shop'
-              : 'All Terrariums'}
+            {searchQuery 
+              ? `Search Results for "${searchQuery}"`
+              : activeCategory
+                ? DEFAULT_CATEGORIES.find((c) => c.slug === activeCategory)?.name || 'Shop'
+                : 'All Terrariums'}
           </h1>
           <p className="text-lg text-text-secondary">
             Browse our collection of handcrafted terrariums and living art

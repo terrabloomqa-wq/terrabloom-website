@@ -34,7 +34,7 @@ export default function AboutPage() {
             <div className="prose max-w-none text-text-secondary leading-relaxed space-y-6 text-lg text-center md:text-left">
               <p>
                 Terra Bloom was born out of a deep love for nature and a desire to bring the calming 
-                presence of greenery into everyday spaces. Founded in Bangalore, India, we handcraft 
+                presence of greenery into everyday spaces. Founded in Doha, Qatar, we handcraft 
                 each terrarium with care, using sustainably sourced plants and eco-friendly materials.
               </p>
               <p>

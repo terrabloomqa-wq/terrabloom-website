@@ -81,7 +81,7 @@ export default function ContactPage() {
                 For quick responses, bulk orders, or custom terrarium inquiries, drop us a direct message.
               </p>
               <a
-                href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`}
+                href={`https://wa.me/${(settings.whatsapp_number || '').replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-[#25D366] text-white rounded-full font-medium hover:bg-[#128C7E] hover:-translate-y-1 hover:shadow-lg transition-all duration-300"

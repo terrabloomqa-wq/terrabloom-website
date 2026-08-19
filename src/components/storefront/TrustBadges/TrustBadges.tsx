@@ -13,7 +13,7 @@ const TRUST_BADGES = [
   },
   {
     icon: Truck,
-    title: 'Pan India Delivery',
+    title: 'Free\u00A0Delivery Across Doha',
     description: 'Secure & free shipping',
     iconColor: 'text-orange-500',
     bg: 'bg-orange-50'

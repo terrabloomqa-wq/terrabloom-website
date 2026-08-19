@@ -81,7 +81,7 @@ export default function Footer() {
             <h4 className="font-display text-sm font-semibold uppercase tracking-wider mb-4">Customer Care</h4>
             <ul className="flex flex-col gap-3">
               <li>
-                <a href={`https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-white/70 hover:text-white transition-colors flex items-center gap-2">
+                <a href={`https://wa.me/${(settings.whatsapp_number || '').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-white/70 hover:text-white transition-colors flex items-center gap-2">
                   <MessageCircle className="w-4 h-4" />
                   WhatsApp Us
                 </a>

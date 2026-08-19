@@ -2,7 +2,7 @@
 // Terra Bloom — WhatsApp Link Builder
 // ============================================================
 
-import type { Product, ShippingFormData } from '@/types';
+import type { Product, ShippingFormData, CartItem } from '@/types';
 import { formatPrice } from './utils';
 
 /**
@@ -27,10 +27,42 @@ export function buildWhatsAppMessage(
     `👤 *Customer Details:*`,
     `• Name: ${customer.name}`,
     `• Phone: ${customer.phone}`,
-    ...(customer.email ? [`• Email: ${customer.email}`] : []),
-    `• Address: ${customer.address}`,
-    `• City: ${customer.city}`,
-    `• Pincode: ${customer.pincode}`,
+    `• Zone: ${customer.zone}`,
+    `• Street: ${customer.street}`,
+    `• Building: ${customer.building}`,
+    ...(customer.notes ? [``, `📝 *Notes:* ${customer.notes}`] : []),
+    ``,
+    `Please confirm availability and delivery details! 🌱`,
+  ];
+
+  return lines.join('\n');
+}
+
+/**
+ * Build a pre-populated WhatsApp message for a full cart order enquiry.
+ */
+export function buildCartWhatsAppMessage(
+  cartItems: CartItem[],
+  customer: ShippingFormData,
+  totalAmount: number
+): string {
+  const lines = [
+    `🌿 *New Cart Order Enquiry — Terra Bloom* 🌿`,
+    ``,
+    `📦 *Order Details:*`,
+    ...cartItems.map(
+      (item, i) =>
+        `${i + 1}. ${item.title} (x${item.quantity}) - ${formatPrice(item.price * item.quantity)}`
+    ),
+    ``,
+    `*Total Amount:* ${formatPrice(totalAmount)}`,
+    ``,
+    `👤 *Customer Details:*`,
+    `• Name: ${customer.name}`,
+    `• Phone: ${customer.phone}`,
+    `• Zone: ${customer.zone}`,
+    `• Street: ${customer.street}`,
+    `• Building: ${customer.building}`,
     ...(customer.notes ? [``, `📝 *Notes:* ${customer.notes}`] : []),
     ``,
     `Please confirm availability and delivery details! 🌱`,

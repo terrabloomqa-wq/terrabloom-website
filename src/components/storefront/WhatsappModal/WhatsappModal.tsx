@@ -2,22 +2,26 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
+import { useCart } from '@/context/CartContext';
 import { Modal, Input } from '@/components/ui';
 import Button from '@/components/ui/Button/Button';
-import { buildWhatsAppMessage, buildWhatsAppUrl } from '@/lib/whatsapp';
+import { buildWhatsAppMessage, buildCartWhatsAppMessage, buildWhatsAppUrl } from '@/lib/whatsapp';
 import { formatPrice } from '@/lib/utils';
 import type { ShippingFormData } from '@/types';
 
 export default function WhatsappModal() {
   const { isWhatsappModalOpen, closeWhatsappModal, selectedProduct, settings } = useStore();
+  const { cartItems, cartTotal, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
+  
+  const isCartCheckout = !selectedProduct && cartItems.length > 0;
+
   const [formData, setFormData] = useState<ShippingFormData>({
     name: '',
     phone: '',
-    email: '',
-    address: '',
-    city: '',
-    pincode: '',
+    zone: '',
+    street: '',
+    building: '',
     notes: '',
   });
   const [errors, setErrors] = useState<Partial<ShippingFormData>>({});
@@ -33,28 +37,34 @@ export default function WhatsappModal() {
     const newErrors: Partial<ShippingFormData> = {};
     if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-    else if (!/^[6-9]\d{9}$/.test(formData.phone.trim())) newErrors.phone = 'Enter a valid 10-digit phone number';
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.pincode.trim()) newErrors.pincode = 'Pincode is required';
-    else if (!/^\d{6}$/.test(formData.pincode.trim())) newErrors.pincode = 'Enter a valid 6-digit pincode';
+    if (!formData.zone.trim()) newErrors.zone = 'Zone is required';
+    if (!formData.street.trim()) newErrors.street = 'Street is required';
+    if (!formData.building.trim()) newErrors.building = 'Building is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate() || !selectedProduct) return;
+    if (!validate()) return;
+    if (!selectedProduct && cartItems.length === 0) return;
 
     setLoading(true);
     try {
       // Build WhatsApp message and redirect
-      const message = buildWhatsAppMessage(selectedProduct, formData);
+      let message = '';
+      if (selectedProduct) {
+        message = buildWhatsAppMessage(selectedProduct, formData);
+      } else {
+        message = buildCartWhatsAppMessage(cartItems, formData, cartTotal);
+      }
+      
       const url = buildWhatsAppUrl(settings.whatsapp_number, message);
       window.open(url, '_blank');
 
       // Reset and close
-      setFormData({ name: '', phone: '', email: '', address: '', city: '', pincode: '', notes: '' });
+      setFormData({ name: '', phone: '', zone: '', street: '', building: '', notes: '' });
+      if (isCartCheckout) clearCart();
       closeWhatsappModal();
     } catch (err) {
       console.error('Error processing order:', err);
@@ -70,28 +80,48 @@ export default function WhatsappModal() {
       title="Complete Your Order"
       maxWidth="520px"
     >
-      {selectedProduct && (
+      {(selectedProduct || isCartCheckout) && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {/* Product Summary */}
-          <div className="flex gap-4 p-4 bg-bg-warm rounded-xl">
-            <div
-              className="w-16 h-16 rounded-lg bg-cover bg-center shrink-0"
-              style={{ backgroundImage: `url(${selectedProduct.image_url})` }}
-            />
-            <div className="flex-1 min-w-0">
-              <h4 className="font-display text-sm font-semibold text-text-main truncate">
-                {selectedProduct.title}
-              </h4>
-              <p className="text-lg font-bold text-primary mt-1">
-                {formatPrice(selectedProduct.price)}
-              </p>
+          {selectedProduct ? (
+            <div className="flex gap-4 p-4 bg-bg-warm rounded-xl">
+              <div
+                className="w-16 h-16 rounded-lg bg-cover bg-center shrink-0"
+                style={{ backgroundImage: `url(${selectedProduct.image_url})` }}
+              />
+              <div className="flex-1 min-w-0">
+                <h4 className="font-display text-sm font-semibold text-text-main truncate">
+                  {selectedProduct.title}
+                </h4>
+                <p className="text-lg font-bold text-primary mt-1">
+                  {formatPrice(selectedProduct.price)}
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-2 p-4 bg-bg-warm rounded-xl">
+              <h4 className="font-display text-sm font-semibold text-text-main border-b border-border-custom pb-2">
+                Cart Summary ({cartItems.length} items)
+              </h4>
+              <div className="max-h-32 overflow-y-auto scrollbar-hide pr-2 space-y-2 mt-1">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex justify-between text-sm">
+                    <span className="truncate pr-2">{item.quantity}x {item.title}</span>
+                    <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between font-bold text-primary mt-2 pt-2 border-t border-border-custom">
+                <span>Total</span>
+                <span>{formatPrice(cartTotal)}</span>
+              </div>
+            </div>
+          )}
 
           {/* Shipping Details */}
           <div className="flex flex-col gap-4">
             <h4 className="text-sm font-semibold text-text-main flex items-center gap-2">
-              📦 Shipping Details
+              Shipping Details
             </h4>
 
             <Input
@@ -107,47 +137,36 @@ export default function WhatsappModal() {
               label="Phone Number *"
               name="phone"
               type="tel"
-              placeholder="10-digit mobile number"
+              placeholder="Mobile number"
               value={formData.phone}
               onChange={(e) => handleChange('phone', e.target.value)}
               error={errors.phone}
             />
 
-            <Input
-              label="Email (Optional)"
-              name="email"
-              type="email"
-              placeholder="your@email.com"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-            />
-
-            <Input
-              label="Delivery Address *"
-              name="address"
-              placeholder="House/Flat No., Street, Locality"
-              value={formData.address}
-              onChange={(e) => handleChange('address', e.target.value)}
-              error={errors.address}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <Input
-                label="City *"
-                name="city"
-                placeholder="City"
-                value={formData.city}
-                onChange={(e) => handleChange('city', e.target.value)}
-                error={errors.city}
+                label="Zone no *"
+                name="zone"
+                placeholder="Zone no"
+                value={formData.zone}
+                onChange={(e) => handleChange('zone', e.target.value)}
+                error={errors.zone}
               />
               <Input
-                label="Pincode *"
-                name="pincode"
-                type="text"
-                placeholder="6-digit pincode"
-                value={formData.pincode}
-                onChange={(e) => handleChange('pincode', e.target.value)}
-                error={errors.pincode}
+                label="Street no *"
+                name="street"
+                placeholder="Street no"
+                value={formData.street}
+                onChange={(e) => handleChange('street', e.target.value)}
+                error={errors.street}
+              />
+              <Input
+                label="Building no *"
+                name="building"
+                placeholder="Building no"
+                value={formData.building}
+                onChange={(e) => handleChange('building', e.target.value)}
+                error={errors.building}
               />
             </div>
 

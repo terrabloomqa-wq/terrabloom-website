@@ -104,9 +104,9 @@ export default function AdminSettingsPage() {
                 value={settings.whatsapp_number}
                 onChange={(e) => setSettings({ ...settings, whatsapp_number: e.target.value })}
                 className="px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
-                placeholder="919876543210"
+                placeholder="e.g. 97455123456"
               />
-              <span className="text-xs text-text-muted">Format: country code + number (e.g., 919876543210)</span>
+              <span className="text-xs text-text-muted">Format: country code + number (e.g. 97455123456)</span>
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium">Contact Phone</label>
@@ -114,7 +114,7 @@ export default function AdminSettingsPage() {
                 value={settings.contact_phone}
                 onChange={(e) => setSettings({ ...settings, contact_phone: e.target.value })}
                 className="px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
-                placeholder="+91 98765 43210"
+                placeholder="e.g. +974 5512 3456"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -137,23 +137,7 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        <hr className="border-gray-100" />
 
-        {/* Announcement */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800">
-            <Megaphone className="w-5 h-5 text-amber-500" />
-            Announcement Bar
-          </h3>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium">Announcement Text</label>
-            <input
-              value={settings.announcement_text}
-              onChange={(e) => setSettings({ ...settings, announcement_text: e.target.value })}
-              className="px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm"
-            />
-          </div>
-        </div>
 
         <hr className="border-gray-100" />
 

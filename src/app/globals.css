@@ -54,6 +54,7 @@
   --animate-scale-in: scale-in 0.4s ease forwards;
   --animate-slide-right: slide-right 0.5s ease forwards;
   --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+  --animate-marquee: marquee 20s linear infinite;
 }
 
 /* ---- Base Overrides ---- */
@@ -104,6 +105,20 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ---- Utilities ---- */
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* ---- Scrollbar ---- */

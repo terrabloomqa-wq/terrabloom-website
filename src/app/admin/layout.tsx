@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext';
-import { LayoutDashboard, Image as ImageIcon, Package, FolderTree, Settings, LogOut, Leaf, ExternalLink, Video } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, Package, FolderTree, Settings, LogOut, Leaf, ExternalLink, Video, MessageSquare } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -12,6 +12,7 @@ const navItems = [
   { label: 'Promo Banner', href: '/admin/promo', icon: Video },
   { label: 'Products', href: '/admin/products', icon: Package },
   { label: 'Categories', href: '/admin/categories', icon: FolderTree },
+  { label: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 

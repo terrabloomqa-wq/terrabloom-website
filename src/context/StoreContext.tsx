@@ -10,7 +10,7 @@ interface StoreContextType {
   settings: StoreSettings;
   isWhatsappModalOpen: boolean;
   selectedProduct: Product | null;
-  openWhatsappModal: (product: Product) => void;
+  openWhatsappModal: (product?: Product | null) => void;
   closeWhatsappModal: () => void;
   refreshSettings: () => Promise<void>;
 }
@@ -36,8 +36,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     fetchSettings();
   }, [fetchSettings]);
 
-  const openWhatsappModal = useCallback((product: Product) => {
-    setSelectedProduct(product);
+  const openWhatsappModal = useCallback((product?: Product | null) => {
+    setSelectedProduct(product || null);
     setIsWhatsappModalOpen(true);
     document.body.style.overflow = 'hidden';
   }, []);
