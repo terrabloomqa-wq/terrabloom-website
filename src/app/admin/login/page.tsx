@@ -28,7 +28,7 @@ function LoginForm() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8 flex flex-col items-center">
-          <img src="/images/logo.png" alt="Terra Bloom Logo" className="w-20 h-20 object-contain mx-auto mb-4" />
+          <img src="/images/logo.jpeg" alt="Terra Bloom Logo" className="w-20 h-20 object-contain mx-auto mb-4" />
           <h1 className="font-heading text-3xl font-bold text-primary">Terra Bloom</h1>
           <p className="text-text-secondary mt-2">Admin Dashboard</p>
         </div>

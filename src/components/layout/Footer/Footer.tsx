@@ -32,7 +32,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-4">
-              <Image src="/images/logo.png" alt="Terra Bloom Logo" width={48} height={48} className="w-12 h-12 object-contain" />
+              <Image src="/images/logo.jpeg" alt="Terra Bloom Logo" width={48} height={48} className="w-12 h-12 object-contain" />
               <div className="flex flex-col">
                 <span className="font-heading text-lg font-bold leading-tight tracking-wide">
                   TERRA BLOOM

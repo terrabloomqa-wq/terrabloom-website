@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "Discover handcrafted terrariums, miniature ecosystems, and living art pieces. Each terrarium is carefully crafted to bring nature's calm into your space. Shop closed terrariums, open terrariums, paludariums, kits & accessories.",
   keywords: "terrariums, handcrafted terrariums, miniature ecosystems, indoor plants, closed terrariums, open terrariums, paludariums, terrarium kits, plant gifts, eco-friendly gifts",
   icons: {
-    icon: "/images/logo.png",
+    icon: "/images/logo.jpeg",
   },
 };
 

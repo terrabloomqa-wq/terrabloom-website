@@ -20,7 +20,7 @@ export default function Header() {
       <div className="max-w-[1280px] mx-auto px-3 md:px-6 h-[72px] flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
-          <Image src="/images/logo.png" alt="Terra Bloom Logo" width={48} height={48} className="w-12 h-12 object-contain" />
+          <Image src="/images/logo.jpeg" alt="Terra Bloom Logo" width={48} height={48} className="w-12 h-12 object-contain" />
           <div className="flex flex-col">
             <span className="font-heading text-xl font-bold text-primary leading-tight tracking-wide whitespace-nowrap">
               TERRA BLOOM

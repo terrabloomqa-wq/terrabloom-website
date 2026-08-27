@@ -127,7 +127,7 @@ function ShopContent() {
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
-            <img src="/images/logo.png" alt="Loading" className="w-12 h-12 object-contain mx-auto mb-3 animate-pulse" />
+            <img src="/images/logo.jpeg" alt="Loading" className="w-12 h-12 object-contain mx-auto mb-3 animate-pulse" />
             <p className="text-text-muted">Loading products...</p>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function ShopPage() {
           fallback={
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
-                <img src="/images/logo.png" alt="Loading" className="w-12 h-12 object-contain mx-auto mb-3 animate-pulse" />
+                <img src="/images/logo.jpeg" alt="Loading" className="w-12 h-12 object-contain mx-auto mb-3 animate-pulse" />
                 <p className="text-text-muted">Loading shop...</p>
               </div>
             </div>

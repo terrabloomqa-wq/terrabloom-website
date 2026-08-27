@@ -50,7 +50,7 @@ export default function HomePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-cream">
         <div className="text-center animate-fade-in flex flex-col items-center">
-          <img src="/images/logo.png" alt="Loading" className="w-16 h-16 object-contain mb-4 animate-pulse" />
+          <img src="/images/logo.jpeg" alt="Loading" className="w-16 h-16 object-contain mb-4 animate-pulse" />
           <p className="text-lg text-text-secondary font-display">Loading Terra Bloom...</p>
         </div>
       </div>
