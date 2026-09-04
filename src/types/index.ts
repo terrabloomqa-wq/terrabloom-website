@@ -62,6 +62,7 @@ export interface StoreSettings {
   contact_phone: string;
   address: string;
   announcement_text: string;
+  footer_about?: string;
   instagram_url?: string;
   facebook_url?: string;
   youtube_url?: string;

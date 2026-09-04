@@ -34,18 +34,19 @@ export default function Footer() {
             <Link href="/" className="flex items-center gap-3 mb-4">
               <Image src="/images/logo.jpeg" alt="Terra Bloom Logo" width={48} height={48} className="w-12 h-12 object-contain" />
               <div className="flex flex-col">
-                <span className="font-heading text-lg font-bold leading-tight tracking-wide">
-                  TERRA BLOOM
+                <span className="font-heading text-lg font-bold leading-tight tracking-wide uppercase">
+                  {settings.store_name || 'TERRA BLOOM'}
                 </span>
                 <span className="text-[9px] uppercase tracking-[0.2em] text-white/70">
-                  A World Within Glass
+                  {settings.tagline || 'A World Within Glass'}
                 </span>
               </div>
             </Link>
-            <p className="text-sm text-white/70 leading-relaxed mb-4">
-              We create sustainable terrariums that bring a little nature closer to you. 
-              Our products are long-lasting, eco-friendly, and sustainable.
-            </p>
+            {settings.footer_about ? (
+              <p className="text-sm text-white/70 leading-relaxed mb-4">
+                {settings.footer_about}
+              </p>
+            ) : null}
           </div>
 
           {/* Shop */}
@@ -99,7 +100,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/15 pt-6 flex flex-col items-center justify-center gap-2 text-center">
           <p className="text-xs text-white/50">
-            © {currentYear} Terra Bloom. All rights reserved.
+            © {currentYear} {settings.store_name || 'Terra Bloom'}. All rights reserved.
           </p>
           <p className="text-xs text-white/50">
             Crafted by <a href="https://www.ekodrix.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Ekodrix</a>

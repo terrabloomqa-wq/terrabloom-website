@@ -45,11 +45,12 @@ CREATE TABLE IF NOT EXISTS store_settings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   store_name TEXT DEFAULT 'Terra Bloom',
   tagline TEXT DEFAULT 'A World Within Glass',
-  whatsapp_number TEXT NOT NULL DEFAULT '919876543210',
-  contact_email TEXT DEFAULT 'hello@terrabloom.in',
-  contact_phone TEXT DEFAULT '+91 98765 43210',
-  address TEXT DEFAULT 'Bangalore, Karnataka, India',
-  announcement_text TEXT DEFAULT 'Handcrafted mini ecosystems, delivered with care across India.',
+  whatsapp_number TEXT NOT NULL DEFAULT '97450300123',
+  contact_email TEXT DEFAULT 'terrabloom.qa@gmail.com',
+  contact_phone TEXT DEFAULT '+974 5030 0123',
+  address TEXT DEFAULT 'Doha, Qatar',
+  announcement_text TEXT DEFAULT 'Handcrafted mini ecosystems, delivered with care across Qatar.',
+  footer_about TEXT DEFAULT 'We create sustainable terrariums that bring a little nature closer to you. Our products are long-lasting, eco-friendly, and sustainable.',
   instagram_url TEXT,
   facebook_url TEXT,
   youtube_url TEXT,
@@ -96,6 +97,7 @@ CREATE POLICY "Admin full access settings" ON store_settings FOR ALL USING (auth
 CREATE POLICY "Admin full access categories" ON categories FOR ALL USING (auth.role() = 'authenticated');
 
 -- ---- Seed: Default Store Settings ----
-INSERT INTO store_settings (store_name, tagline, whatsapp_number, contact_email, contact_phone, address, announcement_text)
-VALUES ('Terra Bloom', 'A World Within Glass', '919876543210', 'hello@terrabloom.in', '+91 98765 43210', 'Bangalore, Karnataka, India', 'Handcrafted mini ecosystems, delivered with care across Qatar.')
+INSERT INTO store_settings (store_name, tagline, whatsapp_number, contact_email, contact_phone, address, announcement_text, footer_about)
+VALUES ('Terra Bloom', 'A World Within Glass', '97450300123', 'terrabloom.qa@gmail.com', '+974 5030 0123', 'Doha, Qatar', 'Handcrafted mini ecosystems, delivered with care across Qatar.', 'We create sustainable terrariums that bring a little nature closer to you. Our products are long-lasting, eco-friendly, and sustainable.')
 ON CONFLICT DO NOTHING;
+

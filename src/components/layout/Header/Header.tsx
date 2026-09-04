@@ -7,9 +7,11 @@ import { usePathname } from 'next/navigation';
 import { Search, ShoppingBag, Menu, X } from 'lucide-react';
 import { NAV_LINKS } from '@/lib/constants';
 import { useCart } from '@/context/CartContext';
+import { useStore } from '@/context/StoreContext';
 import { SearchModal } from '@/components/storefront';
 
 export default function Header() {
+  const { settings } = useStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const pathname = usePathname();
@@ -22,11 +24,11 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
           <Image src="/images/logo.jpeg" alt="Terra Bloom Logo" width={48} height={48} className="w-12 h-12 object-contain" />
           <div className="flex flex-col">
-            <span className="font-heading text-xl font-bold text-primary leading-tight tracking-wide whitespace-nowrap">
-              TERRA BLOOM
+            <span className="font-heading text-xl font-bold text-primary leading-tight tracking-wide whitespace-nowrap uppercase">
+              {settings.store_name || 'TERRA BLOOM'}
             </span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-text-secondary font-medium">
-              A World Within Glass
+              {settings.tagline || 'A World Within Glass'}
             </span>
           </div>
         </Link>

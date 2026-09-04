@@ -4,12 +4,18 @@ import React, { useEffect, useState } from 'react';
 import { getAllBanners, createBanner, updateBanner, deleteBanner } from '@/services';
 import type { HeroBanner } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
+import ConfirmModal from '@/components/ui/ConfirmModal/ConfirmModal';
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<HeroBanner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<HeroBanner | null>(null);
+
+  // Delete modal state
+  const [deletingBanner, setDeletingBanner] = useState<HeroBanner | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [form, setForm] = useState({
     title: '',
     subtitle: '',
@@ -80,10 +86,17 @@ export default function AdminBannersPage() {
     resetForm();
   }
 
-  async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this banner?')) {
-      await deleteBanner(id);
+  async function handleConfirmDelete() {
+    if (!deletingBanner) return;
+    setIsDeleting(true);
+    try {
+      await deleteBanner(deletingBanner.id);
       await loadBanners();
+    } catch (err) {
+      console.error('Error deleting banner:', err);
+    } finally {
+      setIsDeleting(false);
+      setDeletingBanner(null);
     }
   }
 
@@ -208,52 +221,68 @@ export default function AdminBannersPage() {
         <p className="text-text-muted">Loading banners...</p>
       ) : (
         <div className="bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-6 py-3 font-medium text-text-muted">Order</th>
-                <th className="text-left px-6 py-3 font-medium text-text-muted">Title</th>
-                <th className="text-left px-6 py-3 font-medium text-text-muted">Status</th>
-                <th className="text-left px-6 py-3 font-medium text-text-muted">CTA</th>
-                <th className="text-right px-6 py-3 font-medium text-text-muted">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {banners.map((banner) => (
-                <tr key={banner.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-6 py-4">{banner.display_order}</td>
-                  <td className="px-6 py-4 font-medium">{banner.title}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      banner.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      {banner.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-text-muted">{banner.cta_text}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => startEdit(banner)}
-                      className="text-secondary hover:underline mr-4 cursor-pointer"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(banner.id)}
-                      className="text-error hover:underline cursor-pointer"
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse min-w-[650px]">
+              <thead className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <tr>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Order</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Title</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Status</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">CTA</th>
+                  <th className="text-right px-6 py-3.5 whitespace-nowrap font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {banners.length === 0 && (
-            <p className="text-center py-8 text-text-muted">No banners found. Add your first banner!</p>
-          )}
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {banners.map((banner) => (
+                  <tr key={banner.id} className="hover:bg-gray-50/60 transition-colors duration-150">
+                    <td className="px-6 py-4 font-semibold text-gray-700 whitespace-nowrap">#{banner.display_order}</td>
+                    <td className="px-6 py-4 font-semibold text-gray-900 max-w-xs truncate">{banner.title}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        banner.active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-gray-100 text-gray-600 border border-gray-200'
+                      }`}>
+                        {banner.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{banner.cta_text}</td>
+                    <td className="px-6 py-4 text-right whitespace-nowrap font-medium">
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => startEdit(banner)}
+                          className="px-3 py-1 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer text-xs font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingBanner(banner)}
+                          className="px-3 py-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer text-xs font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {banners.length === 0 && (
+              <p className="text-center py-8 text-text-muted">No banners found. Add your first banner!</p>
+            )}
+          </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deletingBanner}
+        onClose={() => setDeletingBanner(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Banner"
+        message={`Are you sure you want to delete banner "${deletingBanner?.title || ''}"? This action cannot be undone.`}
+        confirmText="Delete Banner"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
+

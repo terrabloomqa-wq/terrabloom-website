@@ -2,9 +2,11 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext';
-import { LayoutDashboard, Image as ImageIcon, Package, FolderTree, Settings, LogOut, Leaf, ExternalLink, Video, MessageSquare } from 'lucide-react';
+import { useStore } from '@/context/StoreContext';
+import { LayoutDashboard, Image as ImageIcon, Package, FolderTree, Settings, LogOut, ExternalLink, Video, MessageSquare } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -18,6 +20,7 @@ const navItems = [
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, logout } = useAdminAuth();
+  const { settings } = useStore();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -55,11 +58,17 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="p-6 border-b border-white/5">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-all duration-300">
-              <Leaf className="w-5 h-5" strokeWidth={2.5} />
-            </div>
+            <Image
+              src="/images/logo.jpeg"
+              alt="Terra Bloom Logo"
+              width={44}
+              height={44}
+              className="w-11 h-11 object-contain rounded-xl shrink-0"
+            />
             <div>
-              <span className="font-heading text-lg font-bold tracking-wide block leading-none text-slate-100 group-hover:text-white transition-colors">TERRA BLOOM</span>
+              <span className="font-heading text-lg font-bold tracking-wide block leading-none text-slate-100 group-hover:text-white transition-colors uppercase">
+                {settings.store_name || 'TERRA BLOOM'}
+              </span>
               <span className="text-[10px] text-emerald-400/80 uppercase tracking-[0.2em] font-semibold mt-1 block">Admin Panel</span>
             </div>
           </Link>

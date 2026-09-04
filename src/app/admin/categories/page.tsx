@@ -4,13 +4,18 @@ import React, { useEffect, useState } from 'react';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '@/services/categoriesService';
 import type { Category } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
+import ConfirmModal from '@/components/ui/ConfirmModal/ConfirmModal';
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  
+
+  // Delete modal state
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [form, setForm] = useState({
     name: '',
     slug: '',
@@ -71,15 +76,17 @@ export default function AdminCategoriesPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this category?')) {
-      try {
-        await deleteCategory(id);
-        await loadCategories();
-      } catch (err) {
-        console.error('Failed to delete category', err);
-        alert('Error deleting category');
-      }
+  async function handleConfirmDelete() {
+    if (!deletingCategory) return;
+    setIsDeleting(true);
+    try {
+      await deleteCategory(deletingCategory.id);
+      await loadCategories();
+    } catch (err) {
+      console.error('Failed to delete category', err);
+    } finally {
+      setIsDeleting(false);
+      setDeletingCategory(null);
     }
   }
 
@@ -163,47 +170,55 @@ export default function AdminCategoriesPage() {
       ) : (
         <div className="bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+            <table className="w-full text-sm text-left border-collapse min-w-[600px]">
+              <thead className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <tr>
-                  <th className="text-left px-6 py-3 font-medium text-text-muted">Category</th>
-                  <th className="text-left px-6 py-3 font-medium text-text-muted">Status</th>
-                  <th className="text-right px-6 py-3 font-medium text-text-muted">Actions</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Category</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Status</th>
+                  <th className="text-right px-6 py-3.5 whitespace-nowrap font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100">
                 {categories.map((category) => (
-                  <tr key={category.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={category.id} className="hover:bg-gray-50/60 transition-colors duration-150">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {category.image_url ? (
                           <div
-                            className="w-10 h-10 rounded-lg bg-cover bg-center bg-bg-warm shrink-0"
+                            className="w-10 h-10 rounded-lg bg-cover bg-center bg-bg-warm shrink-0 border border-gray-100"
                             style={{ backgroundImage: `url(${category.image_url})` }}
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-gray-100 shrink-0 flex items-center justify-center text-gray-400 text-xs">No img</div>
+                          <div className="w-10 h-10 rounded-lg bg-gray-100 shrink-0 flex items-center justify-center text-gray-400 text-xs border border-gray-100">No img</div>
                         )}
                         <div>
-                          <span className="font-medium block">{category.name}</span>
-                          <span className="text-xs text-text-muted">/{category.slug}</span>
+                          <span className="font-semibold text-gray-900 block whitespace-nowrap">{category.name}</span>
+                          <span className="text-xs text-gray-400 whitespace-nowrap">/{category.slug}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        category.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        category.active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-gray-100 text-gray-600 border border-gray-200'
                       }`}>
                         {category.active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => startEdit(category)} className="text-secondary hover:underline mr-4 cursor-pointer">
-                        Edit
-                      </button>
-                      <button onClick={() => handleDelete(category.id)} className="text-error hover:underline cursor-pointer">
-                        Delete
-                      </button>
+                    <td className="px-6 py-4 text-right whitespace-nowrap font-medium">
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => startEdit(category)}
+                          className="px-3 py-1 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer text-xs font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingCategory(category)}
+                          className="px-3 py-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer text-xs font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -215,6 +230,18 @@ export default function AdminCategoriesPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deletingCategory}
+        onClose={() => setDeletingCategory(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Category"
+        message={`Are you sure you want to delete "${deletingCategory?.name || 'this category'}"? Products in this category may be affected.`}
+        confirmText="Delete Category"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
+

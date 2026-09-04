@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { getStoreSettings, updateStoreSettings } from '@/services';
 import type { StoreSettings } from '@/types';
-import { Store, Phone, Megaphone, Link as LinkIcon } from 'lucide-react';
+import { Store, Phone, Megaphone, Link as LinkIcon, FileText } from 'lucide-react';
+import { useStore } from '@/context/StoreContext';
 
 export default function AdminSettingsPage() {
+  const { refreshSettings } = useStore();
   const [settings, setSettings] = useState<StoreSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,6 +35,7 @@ export default function AdminSettingsPage() {
     setMessage('');
     try {
       await updateStoreSettings(settings.id, settings);
+      await refreshSettings();
       setMessage('Settings updated successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
@@ -137,11 +140,30 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
+        <hr className="border-gray-100" />
 
+        {/* Footer About Settings */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800">
+            <FileText className="w-5 h-5 text-purple-500" />
+            Footer Information
+          </h3>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium">Footer About Text</label>
+            <textarea
+              value={settings.footer_about || ''}
+              onChange={(e) => setSettings({ ...settings, footer_about: e.target.value })}
+              className="px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm resize-none"
+              rows={3}
+              placeholder="We create sustainable terrariums that bring a little nature closer to you. Our products are long-lasting, eco-friendly, and sustainable."
+            />
+            <span className="text-xs text-text-muted">This description will display under the logo in the website footer.</span>
+          </div>
+        </div>
 
         <hr className="border-gray-100" />
 
-        {/* Social */}
+        {/* Social Links */}
         <div>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800">
             <LinkIcon className="w-5 h-5 text-indigo-500" />

@@ -1,16 +1,24 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getProducts, createProduct, updateProduct, deleteProduct } from '@/services';
+import { getProducts, getCategories, createProduct, updateProduct, deleteProduct } from '@/services';
 import { formatPrice } from '@/lib/utils';
-import type { Product } from '@/types';
+import type { Product, Category } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
+import Select, { SelectOption } from '@/components/ui/Select/Select';
+import ConfirmModal from '@/components/ui/ConfirmModal/ConfirmModal';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Delete modal state
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [form, setForm] = useState({
     title: '',
     slug: '',
@@ -37,15 +45,19 @@ export default function AdminProductsPage() {
   }
 
   useEffect(() => {
-    loadProducts();
+    loadData();
   }, []);
 
-  async function loadProducts() {
+  async function loadData() {
     try {
-      const data = await getProducts();
-      setProducts(data);
+      const [productsData, categoriesData] = await Promise.all([
+        getProducts(),
+        getCategories(),
+      ]);
+      setProducts(productsData);
+      setCategoriesList(categoriesData);
     } catch (err) {
-      console.error('Error loading products:', err);
+      console.error('Error loading products/categories:', err);
     } finally {
       setLoading(false);
     }
@@ -91,25 +103,36 @@ export default function AdminProductsPage() {
     } else {
       await createProduct(productData as Omit<Product, 'id' | 'created_at'>);
     }
-    await loadProducts();
+    await loadData();
     resetForm();
   }
 
-  async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this product?')) {
-      await deleteProduct(id);
-      await loadProducts();
+  async function handleConfirmDelete() {
+    if (!deletingProduct) return;
+    setIsDeleting(true);
+    try {
+      await deleteProduct(deletingProduct.id);
+      await loadData();
+    } catch (err) {
+      console.error('Error deleting product:', err);
+    } finally {
+      setIsDeleting(false);
+      setDeletingProduct(null);
     }
   }
 
-  const categories = [
-    { label: 'Closed Terrariums', slug: 'closed-terrariums' },
-    { label: 'Open Terrariums', slug: 'open-terrariums' },
-    { label: 'Customized Terrariums', slug: 'customized-terrariums' },
-    { label: 'Paludariums', slug: 'paludariums' },
-    { label: 'Terrarium Kits', slug: 'terrarium-kits' },
-    { label: 'Accessories', slug: 'accessories' },
-  ];
+  const categoryOptions: SelectOption[] = categoriesList.map((cat) => ({
+    value: cat.slug,
+    label: cat.name,
+    image: cat.image_url,
+  }));
+
+  if (form.category_slug && !categoryOptions.some((c) => c.value === form.category_slug)) {
+    categoryOptions.unshift({
+      value: form.category_slug,
+      label: form.category || form.category_slug,
+    });
+  }
 
   return (
     <div>
@@ -155,24 +178,21 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium">Category *</label>
-              <select
-                required
-                value={form.category_slug}
-                onChange={(e) => {
-                  const cat = categories.find((c) => c.slug === e.target.value);
-                  setForm({ ...form, category: cat?.label || '', category_slug: e.target.value });
-                }}
-                className="px-4 py-2.5 border border-gray-200 rounded-lg outline-none focus:border-primary text-sm bg-white cursor-pointer"
-              >
-                <option value="">Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat.slug} value={cat.slug}>{cat.label}</option>
-                ))}
-              </select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+            <Select
+              label="Category"
+              required
+              placeholder="Select Category"
+              options={categoryOptions}
+              value={form.category_slug}
+              onChange={(value, option) => {
+                setForm({
+                  ...form,
+                  category_slug: value,
+                  category: option ? option.label : '',
+                });
+              }}
+            />
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium">Price (₹) *</label>
               <input
@@ -213,10 +233,6 @@ export default function AdminProductsPage() {
             />
           </div>
 
-
-
-
-
           <div className="flex items-center gap-6">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.best_seller} onChange={(e) => setForm({ ...form, best_seller: e.target.checked })} className="w-4 h-4" />
@@ -249,49 +265,59 @@ export default function AdminProductsPage() {
       ) : (
         <div className="bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+            <table className="w-full text-sm text-left border-collapse min-w-[750px]">
+              <thead className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 <tr>
-                  <th className="text-left px-6 py-3 font-medium text-text-muted">Product</th>
-                  <th className="text-left px-6 py-3 font-medium text-text-muted">Category</th>
-                  <th className="text-left px-6 py-3 font-medium text-text-muted">Price</th>
-                  <th className="text-left px-6 py-3 font-medium text-text-muted">Status</th>
-                  <th className="text-right px-6 py-3 font-medium text-text-muted">Actions</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Product</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Category</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Price</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Status</th>
+                  <th className="text-right px-6 py-3.5 whitespace-nowrap font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100">
                 {products.map((product) => (
-                  <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={product.id} className="hover:bg-gray-50/60 transition-colors duration-150">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-lg bg-cover bg-center bg-bg-warm shrink-0"
+                          className="w-10 h-10 rounded-lg bg-cover bg-center bg-bg-warm shrink-0 border border-gray-100"
                           style={{ backgroundImage: `url(${product.image_url})` }}
                         />
-                        <span className="font-medium">{product.title}</span>
+                        <span className="font-semibold text-gray-900 max-w-xs truncate">{product.title}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-text-muted">{product.category}</td>
-                    <td className="px-6 py-4 font-medium">{formatPrice(product.price)}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
+                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{product.category}</td>
+                    <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{formatPrice(product.price)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="inline-flex items-center gap-2">
                         {product.best_seller && (
-                          <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full">Best Seller</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/60">
+                            Best Seller
+                          </span>
                         )}
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${
-                          product.in_stock ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          product.in_stock ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'
                         }`}>
                           {product.in_stock ? 'In Stock' : 'Out of Stock'}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button onClick={() => startEdit(product)} className="text-secondary hover:underline mr-4 cursor-pointer">
-                        Edit
-                      </button>
-                      <button onClick={() => handleDelete(product.id)} className="text-error hover:underline cursor-pointer">
-                        Delete
-                      </button>
+                    <td className="px-6 py-4 text-right whitespace-nowrap font-medium">
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => startEdit(product)}
+                          className="px-3 py-1 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer text-xs font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingProduct(product)}
+                          className="px-3 py-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer text-xs font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -303,6 +329,18 @@ export default function AdminProductsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deletingProduct}
+        onClose={() => setDeletingProduct(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${deletingProduct?.title || 'this product'}"? This action cannot be undone.`}
+        confirmText="Delete Product"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
+

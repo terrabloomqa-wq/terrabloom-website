@@ -7,14 +7,15 @@ import type { HeroBanner, Product, Category, StoreSettings, Testimonial } from '
 
 // ---- Store Settings Defaults ----
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
-  id: '',
-  store_name: '',
-  tagline: '',
-  whatsapp_number: '',
-  contact_email: '',
-  contact_phone: '',
-  address: '',
-  announcement_text: '',
+  id: 'default-settings',
+  store_name: 'Terra Bloom',
+  tagline: 'A World Within Glass',
+  whatsapp_number: '97450300123',
+  contact_email: 'terrabloom.qa@gmail.com',
+  contact_phone: '+974 5030 0123',
+  address: 'Doha, Qatar',
+  announcement_text: 'Free Delivery Across Doha | 100% Handcrafted Terrariums',
+  footer_about: '',
   instagram_url: '',
   facebook_url: '',
 };

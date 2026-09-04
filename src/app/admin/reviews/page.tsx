@@ -3,12 +3,18 @@
 import React, { useEffect, useState } from 'react';
 import { getAllTestimonials, createTestimonial, updateTestimonial, deleteTestimonial } from '@/services';
 import type { Testimonial } from '@/types';
+import ConfirmModal from '@/components/ui/ConfirmModal/ConfirmModal';
 
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Testimonial | null>(null);
+
+  // Delete modal state
+  const [deletingReview, setDeletingReview] = useState<Testimonial | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [form, setForm] = useState({
     name: '',
     rating: 5,
@@ -61,10 +67,17 @@ export default function AdminReviewsPage() {
     resetForm();
   }
 
-  async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this review?')) {
-      await deleteTestimonial(id);
+  async function handleConfirmDelete() {
+    if (!deletingReview) return;
+    setIsDeleting(true);
+    try {
+      await deleteTestimonial(deletingReview.id);
       await loadReviews();
+    } catch (err) {
+      console.error('Error deleting review:', err);
+    } finally {
+      setIsDeleting(false);
+      setDeletingReview(null);
     }
   }
 
@@ -140,48 +153,64 @@ export default function AdminReviewsPage() {
         <p className="text-text-muted">Loading reviews...</p>
       ) : (
         <div className="bg-white rounded-xl shadow-soft border border-gray-100 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-6 py-3 font-medium text-text-muted">Name</th>
-                <th className="text-left px-6 py-3 font-medium text-text-muted">Rating</th>
-                <th className="text-left px-6 py-3 font-medium text-text-muted w-1/2">Review</th>
-                <th className="text-right px-6 py-3 font-medium text-text-muted">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reviews.map((review) => (
-                <tr key={review.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">{review.name}</td>
-                  <td className="px-6 py-4">
-                    <span className="text-accent-light font-bold">
-                      {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-text-muted truncate max-w-xs">{review.text}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => startEdit(review)}
-                      className="text-secondary hover:underline mr-4 cursor-pointer"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(review.id)}
-                      className="text-error hover:underline cursor-pointer"
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse min-w-[650px]">
+              <thead className="bg-gray-50/80 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <tr>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Name</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold">Rating</th>
+                  <th className="px-6 py-3.5 whitespace-nowrap font-semibold w-1/2">Review</th>
+                  <th className="text-right px-6 py-3.5 whitespace-nowrap font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {reviews.length === 0 && (
-            <p className="text-center py-8 text-text-muted">No reviews found. Add your first review!</p>
-          )}
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {reviews.map((review) => (
+                  <tr key={review.id} className="hover:bg-gray-50/60 transition-colors duration-150">
+                    <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{review.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-amber-500 font-bold tracking-widest text-sm">
+                        {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 truncate max-w-sm">{review.text}</td>
+                    <td className="px-6 py-4 text-right whitespace-nowrap font-medium">
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => startEdit(review)}
+                          className="px-3 py-1 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer text-xs font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingReview(review)}
+                          className="px-3 py-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer text-xs font-medium"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {reviews.length === 0 && (
+              <p className="text-center py-8 text-text-muted">No reviews found. Add your first review!</p>
+            )}
+          </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deletingReview}
+        onClose={() => setDeletingReview(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Review"
+        message={`Are you sure you want to delete review from "${deletingReview?.name || ''}"? This action cannot be undone.`}
+        confirmText="Delete Review"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
+
