@@ -22,6 +22,9 @@ export default function Footer() {
   const companyLinks = [
     { label: 'About Us', href: '/about' },
     { label: 'Contact Us', href: '/contact' },
+    { label: 'Privacy Policy', href: '/privacy-policy' },
+    { label: 'Refund Policy', href: '/refund-policy' },
+    { label: 'Terms of Service', href: '/terms-of-service' },
   ];
 
   return (
