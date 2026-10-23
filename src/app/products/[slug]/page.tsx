@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { AnnouncementBar, Header, Footer } from '@/components/layout';
 import { WhatsappModal, ProductGrid } from '@/components/storefront';
@@ -9,7 +9,7 @@ import { useStore } from '@/context/StoreContext';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
-import { Leaf, Truck, Recycle, MessageCircle } from 'lucide-react';
+import { Leaf, Truck, Recycle, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { useParams } from 'next/navigation';
 
@@ -18,9 +18,11 @@ export default function ProductDetailPage() {
   const slug = params?.slug;
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [selectedImage, setSelectedImage] = useState('');
   const [notFoundState, setNotFoundState] = useState(false);
   const [suggestedProducts, setSuggestedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const thumbnailsRef = useRef<HTMLDivElement>(null);
   const { openWhatsappModal } = useStore();
   const { addToCart } = useCart();
 
@@ -36,6 +38,8 @@ export default function ProductDetailPage() {
           setNotFoundState(true);
         } else {
           setProduct(data);
+          const initialImages = [...new Set([...(data.images || []), data.image_url].filter(Boolean))];
+          setSelectedImage(initialImages[0] || data.image_url);
           setSuggestedProducts(allProducts.filter(p => p.id !== data.id).slice(0, 4));
         }
       } catch (err) {
@@ -47,6 +51,49 @@ export default function ProductDetailPage() {
     }
     loadProduct();
   }, [slug]);
+
+  const hasDiscount = Boolean(product?.original_price && product.original_price > product.price);
+  const productImages = product
+    ? [...new Set([...(product.images || []), product.image_url].filter(Boolean))].slice(0, 5)
+    : [];
+  const activeImage = selectedImage && productImages.includes(selectedImage)
+    ? selectedImage
+    : productImages[0] || product?.image_url || '';
+  const activeIndex = Math.max(0, productImages.indexOf(activeImage));
+
+  const handleSelectImage = (image: string, index: number) => {
+    setSelectedImage(image);
+    if (thumbnailsRef.current) {
+      const buttons = thumbnailsRef.current.querySelectorAll('button');
+      buttons[index]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (productImages.length <= 1) return;
+    const prevIndex = (activeIndex - 1 + productImages.length) % productImages.length;
+    handleSelectImage(productImages[prevIndex], prevIndex);
+  };
+
+  const handleNextImage = () => {
+    if (productImages.length <= 1) return;
+    const nextIndex = (activeIndex + 1) % productImages.length;
+    handleSelectImage(productImages[nextIndex], nextIndex);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (productImages.length <= 1) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'ArrowLeft') {
+        handlePrevImage();
+      } else if (e.key === 'ArrowRight') {
+        handleNextImage();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [productImages, activeIndex]);
 
   if (loading) {
     return (
@@ -89,8 +136,6 @@ export default function ProductDetailPage() {
     );
   }
 
-  const hasDiscount = product.original_price && product.original_price > product.price;
-
   return (
     <>
       <AnnouncementBar />
@@ -110,29 +155,94 @@ export default function ProductDetailPage() {
 
         {/* Product Detail */}
         <section className="max-w-[1280px] mx-auto px-6 pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Image */}
-            <div className="relative">
-              <div className="aspect-square rounded-2xl overflow-hidden bg-bg-warm">
-                <div
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${product.image_url})` }}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            {/* Gallery Column */}
+            <div className="lg:sticky lg:top-24 self-start flex flex-col gap-4">
+              {/* Main Image Showcase */}
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-bg-warm border border-border-light shadow-soft group select-none">
+                <img
+                  src={activeImage}
+                  alt={product.title}
+                  className="w-full h-full object-cover transition-all duration-300 ease-in-out"
                 />
+
+                {/* Badges */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
+                  {product.best_seller && (
+                    <span className="px-3 py-1.5 bg-accent text-white text-xs font-semibold rounded-md uppercase tracking-wider shadow-sm">
+                      Best Seller
+                    </span>
+                  )}
+                  {hasDiscount && (
+                    <span className="px-3 py-1.5 bg-error text-white text-xs font-semibold rounded-md shadow-sm">
+                      {Math.round(((product.original_price! - product.price) / product.original_price!) * 100)}% OFF
+                    </span>
+                  )}
+                </div>
+
+                {/* Image Counter Badge (when multiple images) */}
+                {productImages.length > 1 && (
+                  <div className="absolute bottom-4 right-4 px-3 py-1 bg-black/60 backdrop-blur-md text-white text-xs font-medium rounded-full shadow-sm z-10 pointer-events-none">
+                    {activeIndex + 1} / {productImages.length}
+                  </div>
+                )}
+
+                {/* Navigation Arrows on Main Image (when multiple images) */}
+                {productImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handlePrevImage}
+                      aria-label="Previous image"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/85 backdrop-blur-md shadow-md text-text-main flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-white hover:scale-110 cursor-pointer z-10"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-text-main" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNextImage}
+                      aria-label="Next image"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/85 backdrop-blur-md shadow-md text-text-main flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-white hover:scale-110 cursor-pointer z-10"
+                    >
+                      <ChevronRight className="w-5 h-5 text-text-main" />
+                    </button>
+                  </>
+                )}
               </div>
 
-              {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
-                {product.best_seller && (
-                  <span className="px-3 py-1.5 bg-accent text-white text-xs font-semibold rounded-md uppercase tracking-wider">
-                    Best Seller
-                  </span>
-                )}
-                {hasDiscount && (
-                  <span className="px-3 py-1.5 bg-error text-white text-xs font-semibold rounded-md">
-                    {Math.round(((product.original_price! - product.price) / product.original_price!) * 100)}% OFF
-                  </span>
-                )}
-              </div>
+              {/* Bottom Thumbnail Strip (Cards) */}
+              {productImages.length > 1 && (
+                <div
+                  ref={thumbnailsRef}
+                  className="flex gap-3 overflow-x-auto py-1 px-0.5 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                  aria-label="Product thumbnails"
+                >
+                  {productImages.map((image, index) => {
+                    const isActive = activeImage === image;
+                    return (
+                      <button
+                        key={`${image}-${index}`}
+                        type="button"
+                        onClick={() => handleSelectImage(image, index)}
+                        aria-label={`View product image ${index + 1} of ${productImages.length}`}
+                        aria-current={isActive ? 'true' : 'false'}
+                        className={`relative shrink-0 w-20 h-20 sm:w-22 sm:h-22 rounded-xl overflow-hidden cursor-pointer transition-all duration-200 snap-start bg-bg-warm border-2 ${
+                          isActive
+                            ? 'border-primary ring-2 ring-primary ring-offset-2 shadow-md scale-[1.03] opacity-100'
+                            : 'border-border-custom hover:border-primary/60 opacity-70 hover:opacity-100 hover:scale-[1.02]'
+                        }`}
+                      >
+                        <img
+                          src={image}
+                          alt={`${product.title} thumbnail ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Details */}

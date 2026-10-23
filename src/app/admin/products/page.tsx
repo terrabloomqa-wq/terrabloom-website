@@ -7,6 +7,38 @@ import type { Product, Category } from '@/types';
 import ImageUpload from '@/components/ui/ImageUpload';
 import Select, { SelectOption } from '@/components/ui/Select/Select';
 import ConfirmModal from '@/components/ui/ConfirmModal/ConfirmModal';
+import { getSupabaseClient } from '@/lib/supabase';
+
+async function deleteCloudinaryImages(imageUrls: string[]) {
+  const uniqueUrls = [...new Set(imageUrls.filter(Boolean))];
+  if (!uniqueUrls.length) return;
+  const cloudinaryUrls = uniqueUrls.filter((imageUrl) => {
+    try {
+      return new URL(imageUrl).hostname === 'res.cloudinary.com';
+    } catch {
+      return false;
+    }
+  });
+  if (!cloudinaryUrls.length) return;
+
+  const supabase = getSupabaseClient();
+  const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
+  if (!session?.access_token) {
+    throw new Error('Your admin session has expired. Sign in again, then retry the deletion.');
+  }
+
+  const response = await fetch('/api/cloudinary/delete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify({ imageUrls: uniqueUrls }),
+  });
+  const result = await response.json() as { error?: string; deleted?: number };
+  if (!response.ok) throw new Error(result.error || 'Cloudinary image deletion failed.');
+  if (!result.deleted) throw new Error('Cloudinary did not delete any image. Check that the saved URL belongs to the configured Cloudinary account.');
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -14,6 +46,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
 
   // Delete modal state
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
@@ -27,6 +60,7 @@ export default function AdminProductsPage() {
     price: 0,
     original_price: 0,
     image_url: '',
+    images: [] as string[],
     description: '',
     best_seller: false,
     featured: false,
@@ -67,14 +101,17 @@ export default function AdminProductsPage() {
     setForm({
       title: '', slug: '', category: '', category_slug: '',
       price: 0, original_price: 0, image_url: '', description: '',
+      images: [],
       best_seller: false, featured: false, in_stock: true,
     });
     setEditingProduct(null);
+    setRemovedImages([]);
     setIsFormOpen(false);
   }
 
   function startEdit(product: Product) {
     setEditingProduct(product);
+    setRemovedImages([]);
     setForm({
       title: product.title,
       slug: product.slug,
@@ -83,6 +120,7 @@ export default function AdminProductsPage() {
       price: product.price,
       original_price: product.original_price || 0,
       image_url: product.image_url,
+      images: (product.images?.length ? product.images : product.image_url ? [product.image_url] : []).slice(0, 5),
       description: product.description,
       best_seller: product.best_seller,
       featured: product.featured,
@@ -93,31 +131,50 @@ export default function AdminProductsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const images = form.images.filter(Boolean).slice(0, 5);
+    if (!images.length) return;
     const productData = {
       ...form,
+      image_url: images[0],
+      images,
       original_price: form.original_price || undefined,
     };
 
-    if (editingProduct) {
-      await updateProduct(editingProduct.id, productData);
-    } else {
-      await createProduct(productData as Omit<Product, 'id' | 'created_at'>);
+    try {
+      if (editingProduct) {
+        const updated = await updateProduct(editingProduct.id, productData);
+        if (!updated) throw new Error('Product update failed.');
+        await deleteCloudinaryImages(removedImages);
+      } else {
+        const created = await createProduct(productData as Omit<Product, 'id' | 'created_at'>);
+        if (!created) throw new Error('Product creation failed.');
+      }
+      await loadData();
+      resetForm();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Could not save the product.');
     }
-    await loadData();
-    resetForm();
   }
 
   async function handleConfirmDelete() {
     if (!deletingProduct) return;
     setIsDeleting(true);
+    let deleted = false;
     try {
-      await deleteProduct(deletingProduct.id);
+      const productImages = deletingProduct.images?.length
+        ? [...deletingProduct.images, deletingProduct.image_url]
+        : [deletingProduct.image_url];
+      const didDelete = await deleteProduct(deletingProduct.id);
+      if (!didDelete) throw new Error('Could not delete the product.');
+      await deleteCloudinaryImages(productImages);
       await loadData();
+      deleted = true;
     } catch (err) {
       console.error('Error deleting product:', err);
+      window.alert(err instanceof Error ? err.message : 'Could not delete product images from Cloudinary. Retry the delete to try again.');
     } finally {
       setIsDeleting(false);
-      setDeletingProduct(null);
+      if (deleted) setDeletingProduct(null);
     }
   }
 
@@ -216,11 +273,46 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          <ImageUpload
-            label="Product Image"
-            value={form.image_url}
-            onChange={(url) => setForm({ ...form, image_url: url })}
-          />
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Product Images * <span className="font-normal text-slate-500">({form.images.length}/5, first image is the main image)</span></p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {form.images.map((url, index) => (
+                <ImageUpload
+                  key={`product-image-${index}`}
+                  label={index === 0 ? 'Main Image' : `Image ${index + 1}`}
+                  value={url}
+                  onChange={(nextUrl) => {
+                    if (!nextUrl && form.images[index]) {
+                      const removedUrl = form.images[index];
+                      setRemovedImages((removed) => removed.includes(removedUrl) ? removed : [...removed, removedUrl]);
+                    }
+                    setForm((current) => {
+                      const images = [...current.images];
+                      if (nextUrl) images[index] = nextUrl;
+                      else images.splice(index, 1);
+                      return { ...current, images, image_url: images[0] || '' };
+                    });
+                  }}
+                />
+              ))}
+              {form.images.length < 5 && (
+                <ImageUpload
+                  label={form.images.length === 0 ? 'Main Image' : 'Add another image'}
+                  value=""
+                  onChange={(url) => {
+                    if (!url) return;
+                    setForm((current) => ({
+                      ...current,
+                      images: [...current.images, url].slice(0, 5),
+                      image_url: current.images[0] || url,
+                    }));
+                  }}
+                />
+              )}
+            </div>
+          </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium">Description *</label>
@@ -249,7 +341,7 @@ export default function AdminProductsPage() {
           </div>
 
           <div className="flex gap-3">
-            <button type="submit" className="px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-light transition-colors cursor-pointer">
+            <button type="submit" disabled={!form.images.length} className="px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-light transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               {editingProduct ? 'Update Product' : 'Create Product'}
             </button>
             <button type="button" onClick={resetForm} className="px-6 py-2.5 bg-gray-100 text-text-main rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors cursor-pointer">

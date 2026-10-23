@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS products (
   price INTEGER NOT NULL,
   original_price INTEGER,
   image_url TEXT NOT NULL,
-  images TEXT[],
+  images TEXT[] NOT NULL DEFAULT '{}',
   description TEXT NOT NULL,
   care_instructions TEXT,
   best_seller BOOLEAN DEFAULT false,
@@ -39,6 +39,11 @@ CREATE TABLE IF NOT EXISTS products (
   tags TEXT[],
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE products
+  DROP CONSTRAINT IF EXISTS products_images_max_five;
+ALTER TABLE products
+  ADD CONSTRAINT products_images_max_five CHECK (cardinality(images) <= 5);
 
 -- ---- Store Settings (single-row) ----
 CREATE TABLE IF NOT EXISTS store_settings (

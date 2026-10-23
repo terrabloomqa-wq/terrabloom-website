@@ -22,6 +22,7 @@ CREATE TABLE products (
   price integer NOT NULL,
   original_price integer,
   image_url text NOT NULL,
+  images text[] NOT NULL DEFAULT '{}',
   description text NOT NULL,
   care_instructions text,
   best_seller boolean DEFAULT false,
@@ -30,6 +31,9 @@ CREATE TABLE products (
   tags text[] DEFAULT '{}',
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+ALTER TABLE products
+  ADD CONSTRAINT products_images_max_five CHECK (cardinality(images) <= 5);
 
 -- Enable RLS (Row Level Security) and add public read policies
 ALTER TABLE hero_banners ENABLE ROW LEVEL SECURITY;
